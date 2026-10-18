@@ -3,6 +3,7 @@ name: doompedia-ios-build
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "ios-app/**"
       - ".github/workflows/ios-build.yml"
