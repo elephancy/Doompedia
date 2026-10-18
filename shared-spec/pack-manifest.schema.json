@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mahmoudelfeelig.github.io/doompedia/shared-spec/pack-manifest.schema.json",
+  "$id": "https://elephancy.github.io/doompedia/shared-spec/pack-manifest.schema.json",
   "title": "Doompedia Pack Manifest",
   "type": "object",
   "required": [
