@@ -1,4 +1,4 @@
-name: doompedia-release
+name: Release
 
 on:
   workflow_dispatch:
@@ -16,6 +16,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: workflow-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   android-release:
