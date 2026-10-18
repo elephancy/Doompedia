@@ -82,6 +82,8 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@6cfc8b8e8bb586cc164bef1c478c1eea3a4d6a19 # v3
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: platform-tools
       - name: Run Android unit tests
         working-directory: android-app
         run: ./gradlew testDebugUnitTest --stacktrace --console=plain
