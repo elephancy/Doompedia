@@ -3,6 +3,7 @@ name: doompedia-ios-build
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "ios-app/**"
       - ".github/workflows/ios-build.yml"
@@ -13,6 +14,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   ios-simulator-build:
