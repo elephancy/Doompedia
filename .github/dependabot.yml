@@ -1,0 +1,46 @@
+version: 2
+updates:
+- package-ecosystem: docker
+  directory: /deploy
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
+  groups:
+    patch-updates:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
+  groups:
+    patch-updates:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+- package-ecosystem: gradle
+  directory: /android-app
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
+  groups:
+    patch-updates:
+      patterns:
+      - '*'
+      update-types:
+      - patch
+- package-ecosystem: pip
+  directory: /data-pipeline
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
+  groups:
+    patch-updates:
+      patterns:
+      - '*'
+      update-types:
+      - patch

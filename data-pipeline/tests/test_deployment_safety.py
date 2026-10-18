@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-GATEWAY_SHA = "f6319b2dbaf4c1f10230c6425967f34553acd61d"
 
 
 def test_code_release_build_context_allows_only_brand_files_from_content_tree() -> None:
@@ -76,31 +74,16 @@ def test_local_runtime_contract_cannot_write_the_content_mount() -> None:
     assert "/var/run/docker.sock" not in compose
 
 
-def test_release_caller_has_no_direct_host_credentials_or_mutation() -> None:
-    workflow = (ROOT / ".github" / "workflows" / "deploy-production.yml").read_text(
-        encoding="utf-8"
+def test_production_release_authority_is_absent_from_application_workflows() -> None:
+    assert not (ROOT / ".github/workflows/deploy-production.yml").exists()
+    assert not (ROOT / ".github/hetzner-release.json").exists()
+    workflows = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((ROOT / ".github/workflows").glob("*.y*ml"))
     )
-    assert f"HetznerReleaseGateway/.github/workflows/release.yml@{GATEWAY_SHA}" in workflow
-    assert "id-token: write" in workflow
-    assert "steps:" not in workflow
-    assert not any(line.lstrip().startswith("run:") for line in workflow.splitlines())
-    assert "actions/checkout" not in workflow
-    assert "secrets: inherit" not in workflow
-    assert "secrets." not in workflow
-
-    release_config = json.loads(
-        (ROOT / ".github" / "hetzner-release.json").read_text(encoding="utf-8")
-    )
-    assert release_config["release"] == {
-        "strategy": "source-build",
-        "components": [
-            {
-                "name": "web",
-                "context": ".",
-                "dockerfile": "deploy/Dockerfile",
-            }
-        ],
-    }
+    assert "HetznerReleaseGateway/" not in workflows
+    assert "id-token: write" not in workflows
+    assert "secrets: inherit" not in workflows
 
 
 def test_no_workflow_can_reach_a_host_or_invoke_content_upload_tools() -> None:
