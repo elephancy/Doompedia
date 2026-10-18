@@ -1,6 +1,8 @@
 # Production content safety
 
-Code releases are published through the shared OIDC release gateway. They must
+The private controller discovers reviewed `main` commits after their required CI
+runs succeed and owns code publication and deployment. Application workflows
+carry no production release authority or duplicate release manifest. Code releases must
 not copy, synchronize, prune, replace, or otherwise mutate the authoritative
 production content tree. The private controller mounts that already-verified
 tree read-only into the static runtime.
