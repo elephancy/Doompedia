@@ -540,7 +540,7 @@ function renderAbout() {
           <div class="project-fact"><span>License records</span><strong>Included</strong></div>
         </div>
         <div class="project-links">
-          <a href="https://github.com/mahmoudelfeelig/doompedia" target="_blank" rel="noreferrer">Project source ${icon("external")}</a>
+          <a href="https://github.com/elephancy/doompedia" target="_blank" rel="noreferrer">Project source ${icon("external")}</a>
           <a href="/content/featured_thumbnails.json" target="_blank" rel="noreferrer">Image attribution ${icon("external")}</a>
         </div>
       </aside>
