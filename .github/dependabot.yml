@@ -1,46 +1,58 @@
 version: 2
 updates:
-- package-ecosystem: docker
-  directory: /deploy
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 5
-  groups:
-    patch-updates:
-      patterns:
-      - '*'
-      update-types:
-      - patch
-- package-ecosystem: github-actions
-  directory: /
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 5
-  groups:
-    patch-updates:
-      patterns:
-      - '*'
-      update-types:
-      - patch
-- package-ecosystem: gradle
-  directory: /android-app
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 5
-  groups:
-    patch-updates:
-      patterns:
-      - '*'
-      update-types:
-      - patch
-- package-ecosystem: pip
-  directory: /data-pipeline
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 5
-  groups:
-    patch-updates:
-      patterns:
-      - '*'
-      update-types:
-      - patch
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    cooldown:
+      default-days: 3
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    cooldown:
+      default-days: 3
+  - package-ecosystem: gradle
+    directory: /android-app
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    cooldown:
+      default-days: 3
+  - package-ecosystem: pip
+    directory: /data-pipeline
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    cooldown:
+      default-days: 3
