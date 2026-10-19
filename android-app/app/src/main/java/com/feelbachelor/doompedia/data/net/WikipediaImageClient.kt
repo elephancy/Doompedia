@@ -104,7 +104,7 @@ class WikipediaImageClient {
             connectTimeout = 10_000
             readTimeout = 12_000
             setRequestProperty("Accept", accept)
-            setRequestProperty("User-Agent", "Doompedia/0.1 (+https://github.com/mahmoudelfeelig/doompedia)")
+            setRequestProperty("User-Agent", "Doompedia/0.1 (+https://github.com/elephancy/doompedia)")
         }
 
         return connection.use { conn ->

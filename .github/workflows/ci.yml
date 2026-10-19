@@ -1,15 +1,17 @@
-name: doompedia-ci
+name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: doompedia-ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   pipeline-tests:
@@ -84,6 +86,8 @@ jobs:
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
         with:
           packages: platform-tools
+      - name: Install Android compile SDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2"'
       - name: Run Android unit tests
         working-directory: android-app
         run: ./gradlew testDebugUnitTest --stacktrace --console=plain
@@ -128,3 +132,14 @@ jobs:
             -destination "$IOS_SIM_DEST" \
             CODE_SIGNING_ALLOWED=NO \
             test
+      - name: Package simulator .app
+        working-directory: ios-app
+        run: |
+          APP_PATH="$(find ~/Library/Developer/Xcode/DerivedData -type d -name Doompedia.app | head -n 1)"
+          test -n "$APP_PATH"
+          ditto -c -k --keepParent "$APP_PATH" doompedia-ios-simulator-debug.zip
+      - name: Upload iOS simulator artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: doompedia-ios-simulator-debug
+          path: ios-app/doompedia-ios-simulator-debug.zip

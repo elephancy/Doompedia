@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -8,7 +11,11 @@ plugins {
 
 android {
     namespace = "com.feelbachelor.doompedia"
-    compileSdk = 35
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
 
     defaultConfig {
         applicationId = "com.feelbachelor.doompedia"
@@ -41,14 +48,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-Xjvm-default=all",
-            "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
-        )
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -61,6 +60,14 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+        jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
+        optIn.add("androidx.compose.material.ExperimentalMaterialApi")
+    }
+}
+
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
     arg("room.incremental", "true")
@@ -69,10 +76,10 @@ ksp {
 
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.09.00")
-    val roomVersion = "2.8.4"
+    val roomVersion = "2.8.5"
 
-    implementation("androidx.core:core-ktx:1.13.1")
-    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.appcompat:appcompat:1.8.0")
     implementation("androidx.activity:activity-compose:1.9.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
@@ -85,31 +92,31 @@ dependencies {
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("com.google.android.material:material:1.12.0")
+    implementation("com.google.android.material:material:1.14.0")
 
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("io.coil-kt:coil:2.7.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
     constraints {
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.6.3") {
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0") {
             because("kotlinx.serialization 1.7.x requires Kotlin 2.x, while this project targets Kotlin 1.9.24")
         }
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3") {
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") {
             because("keep serialization runtime aligned with Kotlin 1.9.24 toolchain")
         }
     }
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")

@@ -163,7 +163,7 @@ final class WikipediaAPIClient {
     private func makeRequest(url: URL) -> URLRequest {
         var request = URLRequest(url: url)
         request.timeoutInterval = 20
-        request.setValue("Doompedia/0.1 (+https://github.com/mahmoudelfeelig/doompedia)", forHTTPHeaderField: "User-Agent")
+        request.setValue("Doompedia/0.1 (+https://github.com/elephancy/doompedia)", forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         return request
     }
