@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -41,14 +44,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += listOf(
-            "-Xjvm-default=all",
-            "-opt-in=androidx.compose.material.ExperimentalMaterialApi",
-        )
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -58,6 +53,14 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+        jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
+        optIn.add("androidx.compose.material.ExperimentalMaterialApi")
     }
 }
 
