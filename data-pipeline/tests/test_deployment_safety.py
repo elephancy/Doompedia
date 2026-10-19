@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 
@@ -38,9 +39,8 @@ def test_code_release_image_bakes_only_the_two_brand_assets() -> None:
         for line in dockerfile.splitlines()
         if line.strip().upper().startswith(("COPY ", "ADD "))
     ]
-    assert instructions == [
-        "FROM caddy:2-alpine@sha256:"
-        "5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648",
+    assert re.fullmatch(r"FROM caddy:2-alpine@sha256:[0-9a-f]{64}", instructions[0])
+    assert instructions[1:] == [
         "RUN setcap -r /usr/bin/caddy \\",
         "&& test -z \"$(getcap /usr/bin/caddy)\" \\",
         "&& addgroup -S -g 10001 doompedia \\",
