@@ -11,7 +11,11 @@ plugins {
 
 android {
     namespace = "com.feelbachelor.doompedia"
-    compileSdk = 35
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
 
     defaultConfig {
         applicationId = "com.feelbachelor.doompedia"
