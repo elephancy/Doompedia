@@ -34,18 +34,17 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@6cfc8b8e8bb586cc164bef1c478c1eea3a4d6a19 # v3
-        with:
-          gradle-version: 8.10.2
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
         with:
           packages: platform-tools
       - name: Build Android release
         working-directory: android-app
-        run: gradle assembleRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace --console=plain
       - name: Upload Android release artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: doompedia-android-release
+          if-no-files-found: error
           path: |
             android-app/app/build/outputs/apk/release/*.apk
             android-app/app/build/outputs/bundle/release/*.aab
@@ -84,3 +83,4 @@ jobs:
         with:
           name: doompedia-ios-simulator-release
           path: ios-app/doompedia-ios-simulator-release.zip
+          if-no-files-found: error
