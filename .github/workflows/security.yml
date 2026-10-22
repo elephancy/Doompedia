@@ -1,0 +1,23 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * 2'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scans:
+    uses: elephancy/.github/.github/workflows/security.yml@bd2b535771fb0e113c14f7714c73d4000323bcc5
+    with:
+      runner: '["ubuntu-24.04"]'
+      policy-source-sha: bd2b535771fb0e113c14f7714c73d4000323bcc5

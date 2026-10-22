@@ -1,0 +1,24 @@
+{
+  "security": {
+    "workflow": "security.yml",
+    "policy": "elephancy/.github@bd2b535771fb0e113c14f7714c73d4000323bcc5",
+    "tools": [
+      "semgrep-ce",
+      "trivy",
+      "gitleaks-cli"
+    ],
+    "runner": "github-hosted",
+    "fork_pull_requests": "github-hosted-read-only"
+  },
+  "native_secret_scanning": "enabled-with-push-protection",
+  "codecov": {
+    "status": "configured-awaiting-account-activation",
+    "coverage_workflows": [
+      "ci.yml"
+    ],
+    "upload_switch": "CODECOV_UPLOAD_ENABLED",
+    "uploads_enabled_by_rollout": false
+  },
+  "lighthouse_ci": "not-configured-local-browser-fixture-required",
+  "gameci": "not-a-unity-project"
+}
