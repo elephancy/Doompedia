@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   scans:
-    uses: elephancy/.github/.github/workflows/security.yml@8137135f6294481c6df7bcad8c29241d05620ad9
+    uses: elephancy/.github/.github/workflows/security.yml@6da93d98c823e48cd473e325b5d7e50184915b30
     with:
       runner: '["ubuntu-24.04"]'
-      policy-source-sha: 8137135f6294481c6df7bcad8c29241d05620ad9
+      policy-source-sha: 6da93d98c823e48cd473e325b5d7e50184915b30
