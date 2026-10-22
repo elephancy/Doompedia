@@ -87,6 +87,29 @@ class FeaturedArticle:
     thumbnail_url: str
 
 
+REMOTE_HOSTS = frozenset({"en.wikipedia.org", "upload.wikimedia.org"})
+
+
+def checked_remote_url(url: str) -> str:
+    parsed = urllib.parse.urlsplit(url)
+    if (parsed.scheme != "https" or parsed.hostname not in REMOTE_HOSTS
+            or parsed.port not in (None, 443) or parsed.username is not None
+            or parsed.password is not None or parsed.fragment):
+        raise ValueError("Only approved HTTPS Wikimedia endpoints are permitted")
+    return url
+
+
+class WikimediaRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        checked_remote_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def open_remote(request: urllib.request.Request, timeout: int):
+    checked_remote_url(request.full_url)
+    return urllib.request.build_opener(WikimediaRedirect()).open(request, timeout=timeout)
+
+
 def request_json(params: dict[str, Any], retries: int = 4) -> dict[str, Any]:
     query = urllib.parse.urlencode(params)
     request = urllib.request.Request(
@@ -95,7 +118,7 @@ def request_json(params: dict[str, Any], retries: int = 4) -> dict[str, Any]:
     )
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(request, timeout=30) as response:
+            with open_remote(request, timeout=30) as response:
                 return json.load(response)
         except Exception:
             if attempt == retries - 1:
@@ -304,7 +327,7 @@ def download_thumbnail(article: FeaturedArticle, output_dir: Path) -> dict[str, 
     for attempt in range(6):
         try:
             wait_for_download_slot()
-            with urllib.request.urlopen(request, timeout=45) as response:
+            with open_remote(request, timeout=45) as response:
                 body = response.read(MAX_THUMBNAIL_BYTES + 1)
                 content_type = response.headers.get("Content-Type", "image/jpeg")
             break
