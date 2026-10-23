@@ -102,21 +102,21 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("io.coil-kt:coil:2.7.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
 
     constraints {
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0") {
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0") {
             because("kotlinx.serialization 1.7.x requires Kotlin 2.x, while this project targets Kotlin 1.9.24")
         }
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0") {
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0") {
             because("keep serialization runtime aligned with Kotlin 1.9.24 toolchain")
         }
     }
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.12.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
