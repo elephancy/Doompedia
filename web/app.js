@@ -1,5 +1,6 @@
 const DATA_PATH = "/content/seed_en_cards.json";
 const THUMBNAIL_PATH = "/content/featured_thumbnails.json";
+const COMPACT_CATALOGUE_PATH = "/content/featured_catalogue.json";
 const SITE_ORIGIN = "https://doompedia.elfeel.me";
 const PACK_BASE_URL = `${SITE_ORIGIN}/packs`;
 const STORAGE_KEY = "doompedia-web-state-v1";
@@ -26,6 +27,7 @@ const app = {
   articles: [],
   articleById: new Map(),
   thumbnails: new Map(),
+  featuredImageBytes: 0,
   state: loadState(),
   route: "explore",
   observer: null,
@@ -42,37 +44,86 @@ window.addEventListener("hashchange", route);
 async function init() {
   applySettings();
   try {
-    const [cardsResponse, thumbnailsResponse] = await Promise.all([
-      fetch(DATA_PATH),
-      fetch(THUMBNAIL_PATH),
-    ]);
-    if (!cardsResponse.ok || !thumbnailsResponse.ok) {
-      throw new Error("Starter content could not be loaded");
-    }
+    const compact = await loadCompactCatalogue();
+    if (compact) {
+      app.articles = compact.articles;
+      app.featuredImageBytes = compact.featuredImageBytes;
+    } else {
+      const [cardsResponse, thumbnailsResponse] = await Promise.all([
+        fetch(DATA_PATH),
+        fetch(THUMBNAIL_PATH),
+      ]);
+      if (!cardsResponse.ok || !thumbnailsResponse.ok) {
+        throw new Error("Starter content could not be loaded");
+      }
 
-    const [cards, thumbnailManifest] = await Promise.all([
-      cardsResponse.json(),
-      thumbnailsResponse.json(),
-    ]);
-    app.thumbnails = new Map(
-      thumbnailManifest.articles.map((entry) => [Number(entry.page_id), entry]),
-    );
-    app.articles = cards
-      .map((card, index) => ({
-        ...card,
-        page_id: Number(card.page_id),
-        order: index,
-        thumbnail: app.thumbnails.get(Number(card.page_id))?.filename
-          ? `/media/featured/${app.thumbnails.get(Number(card.page_id)).filename}`
-          : "",
-      }))
-      .filter((card) => card.thumbnail);
+      const [cards, thumbnailManifest] = await Promise.all([
+        cardsResponse.json(),
+        thumbnailsResponse.json(),
+      ]);
+      app.thumbnails = new Map(
+        thumbnailManifest.articles.map((entry) => [Number(entry.page_id), entry]),
+      );
+      app.featuredImageBytes = thumbnailManifest.articles.reduce((total, entry) => {
+        const bytes = Number(entry.bytes);
+        return total + (Number.isFinite(bytes) && bytes > 0 ? bytes : 0);
+      }, 0);
+      app.articles = cards
+        .map((card, index) => ({
+          ...card,
+          page_id: Number(card.page_id),
+          order: index,
+          thumbnail: app.thumbnails.get(Number(card.page_id))?.filename
+            ? `/media/featured/${app.thumbnails.get(Number(card.page_id)).filename}`
+            : "",
+        }))
+        .filter((card) => card.thumbnail);
+    }
     app.articleById = new Map(app.articles.map((article) => [article.page_id, article]));
     app.state.saved = app.state.saved.filter((id) => app.articleById.has(Number(id))).map(Number);
     bindGlobalActions();
     route();
   } catch (error) {
     renderLoadError(error);
+  }
+}
+
+async function loadCompactCatalogue() {
+  try {
+    const [catalogueResponse, cardsHead, thumbnailsHead] = await Promise.all([
+      fetch(COMPACT_CATALOGUE_PATH, { cache: "no-cache" }),
+      fetch(DATA_PATH, { method: "HEAD", cache: "no-cache" }),
+      fetch(THUMBNAIL_PATH, { method: "HEAD", cache: "no-cache" }),
+    ]);
+    if (
+      !catalogueResponse.ok || !cardsHead.ok || !thumbnailsHead.ok ||
+      !catalogueResponse.headers.get("content-type")?.toLowerCase().includes("application/json")
+    ) return null;
+    const catalogue = await catalogueResponse.json();
+    const cardsETag = cardsHead.headers.get("etag");
+    const thumbnailsETag = thumbnailsHead.headers.get("etag");
+    if (
+      catalogue.version !== 1 ||
+      !cardsETag || !thumbnailsETag ||
+      catalogue.sources?.cardsETag !== cardsETag ||
+      catalogue.sources?.thumbnailsETag !== thumbnailsETag ||
+      !Array.isArray(catalogue.articles) ||
+      catalogue.articles.length !== catalogue.count ||
+      !Number.isFinite(catalogue.featuredImageBytes) || catalogue.featuredImageBytes < 0 ||
+      !catalogue.articles.every((article) =>
+        Number.isSafeInteger(article.page_id) &&
+        Number.isSafeInteger(article.order) &&
+        typeof article.title === "string" &&
+        typeof article.summary === "string" &&
+        typeof article.wiki_url === "string" &&
+        typeof article.topic_key === "string" &&
+        typeof article.thumbnail === "string" && article.thumbnail.startsWith("/media/featured/")
+      )
+    ) return null;
+    return catalogue;
+  } catch {
+    // An absent, invalid or stale compact file must never hide the full catalog.
+    return null;
   }
 }
 
@@ -152,10 +203,14 @@ function renderExplore() {
   view.innerHTML = `
     <div class="explore-layout">
       <section aria-label="Article discovery">
+        <header class="explore-intro">
+          <h1>Discover Wikipedia at your own pace</h1>
+          <p>Explore Wikipedia article summaries and save discoveries in your browser.</p>
+        </header>
         <div class="feed-toolbar">
           <div class="search-field ${app.state.query ? "has-value" : ""}">
             ${icon("search")}
-            <input id="feed-search" type="search" placeholder="Search 500 articles" autocomplete="off" value="${escapeHtml(app.state.query)}" aria-label="Search articles" />
+            <input id="feed-search" type="search" placeholder="Search ${app.articles.length.toLocaleString()} articles" autocomplete="off" value="${escapeHtml(app.state.query)}" aria-label="Search articles" />
             <button class="search-clear" type="button" data-action="clear-search" aria-label="Clear search">${icon("x")}</button>
           </div>
           <div class="filter-row" aria-label="Topic filters">
@@ -171,7 +226,7 @@ function renderExplore() {
           <h2>Starter collection</h2>
           <div class="rail-stat"><span>Curated articles</span><strong>${app.articles.length}</strong></div>
           <div class="rail-stat"><span>Saved locally</span><strong>${app.state.saved.length}</strong></div>
-          <div class="rail-stat"><span>Image set</span><strong>108 MB</strong></div>
+          <div class="rail-stat"><span>Hosted image set</span><strong>${formatBytes(app.featuredImageBytes)}</strong></div>
         </div>
         <div class="rail-section">
           <h2>Browse topics</h2>
@@ -353,9 +408,9 @@ function renderPacks() {
     {
       id: "featured",
       title: "Featured starter",
-      description: "500 visual articles selected from Wikipedia's Vital Articles.",
-      size: "108 MB media",
-      count: "500 articles",
+      description: "Visual articles selected from Wikipedia's Vital Articles.",
+      size: `${formatBytes(app.featuredImageBytes)} hosted images`,
+      count: `${app.articles.length.toLocaleString()} articles`,
       href: `${SITE_ORIGIN}/content/featured_thumbnails.json`,
     },
     {
@@ -393,7 +448,7 @@ function renderPacks() {
   ];
 
   view.innerHTML = `
-    ${viewHeader("Packs", "Choose the collections available to this browser.", "Offline data")}
+    ${viewHeader("Packs", "Browse collection manifests. Marking a pack here does not download it to this browser.", "Collections")}
     <div class="content-page">
       <div class="pack-list">
         ${packs.map(packRow).join("")}
@@ -419,8 +474,8 @@ function packRow(pack, index) {
       <div class="pack-actions">
         ${
           installed
-            ? `<span class="installed-label">${icon("check")} Available</span>`
-            : `<button class="primary-button" type="button" data-action="toggle-pack" data-pack-id="${pack.id}">${icon("download")} Add</button>`
+            ? `<span class="installed-label">${icon("check")} Marked</span>`
+            : `<button class="primary-button" type="button" data-action="toggle-pack" data-pack-id="${pack.id}">${icon("download")} Mark</button>`
         }
         <a class="icon-button" href="${pack.href}" target="_blank" rel="noreferrer" aria-label="Open ${escapeHtml(pack.title)} manifest">${icon("external")}</a>
       </div>
@@ -432,7 +487,7 @@ function togglePack(packId) {
   if (!app.state.installedPacks.includes(packId)) {
     app.state.installedPacks.push(packId);
     saveState();
-    showToast("Pack added to this browser");
+    showToast("Pack marked in this browser; no download started");
     renderPacks();
   }
 }
@@ -528,14 +583,14 @@ function renderAbout() {
     <div class="content-page about-layout">
       <div class="about-copy">
         <h2>Wikipedia discovery without the browser tab spiral.</h2>
-        <p>Doompedia turns short Wikipedia summaries into a visual feed that can be searched, saved, and packaged for offline use. The project includes this browser experience, a native Android app, and a data pipeline for building downloadable collections.</p>
-        <p>The starter collection uses 500 freely licensed lead images and article summaries selected from Wikipedia's Vital Articles lists. Larger packs contain text summaries and fetch images separately so storage remains predictable.</p>
+        <p>Doompedia turns short Wikipedia summaries into a visual feed that can be searched and saved in this browser. The project also includes a native Android app and a data pipeline for building downloadable collections.</p>
+        <p>The starter collection uses freely licensed lead images and article summaries selected from Wikipedia's Vital Articles lists. The browser view loads its collection from the network; marking a pack does not download it.</p>
         <p>Doompedia is an independent project and is not affiliated with or endorsed by the Wikimedia Foundation.</p>
       </div>
       <aside>
         <div class="project-facts">
-          <div class="project-fact"><span>Starter collection</span><strong>500 articles</strong></div>
-          <div class="project-fact"><span>Hosted thumbnails</span><strong>108 MB</strong></div>
+          <div class="project-fact"><span>Starter collection</span><strong>${app.articles.length.toLocaleString()} articles</strong></div>
+          <div class="project-fact"><span>Hosted thumbnails</span><strong>${formatBytes(app.featuredImageBytes)}</strong></div>
           <div class="project-fact"><span>Core pack target</span><strong>1M summaries</strong></div>
           <div class="project-fact"><span>License records</span><strong>Included</strong></div>
         </div>
@@ -724,6 +779,13 @@ function titleCase(value) {
   return String(value || "general")
     .replace(/[_-]/g, " ")
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatBytes(bytes) {
+  if (!bytes) return "Size unavailable";
+  return bytes >= 1_000_000_000
+    ? `${(bytes / 1_000_000_000).toFixed(1)} GB`
+    : `${(bytes / 1_000_000).toFixed(0)} MB`;
 }
 
 function escapeHtml(value) {
