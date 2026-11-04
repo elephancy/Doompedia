@@ -2,10 +2,12 @@
 
 Offline-first discovery app with 1M Wikipedia summary cards, native Android and iOS clients, and a shared data/ranking specification.
 
+Explore the public web app at [doompedia.elfeel.me](https://doompedia.elfeel.me/).
+
 ## Product summary
-- Cards are available offline after initial setup.
+- The browser demo loads the starter collection over the network; marking a pack in the web interface does not download it.
 - Hosted pack files can be served from a normal HTTPS static host such as Caddy on Hetzner.
-- A curated 500-article starter feed uses freely licensed Wikipedia thumbnails
+- The curated starter feed uses freely licensed Wikipedia thumbnails
   hosted with the website and cached locally instead of inflating the APK or
   core article packs.
 - Optional online mode can fetch live summaries without downloading a pack first (with local caching).
@@ -15,6 +17,16 @@ Offline-first discovery app with 1M Wikipedia summary cards, native Android and 
 - Manifest-driven pack updates with delta-first fallback to full shard refresh.
 - Manual update checks from the Packs tab (auto update polling is disabled by design).
 - Attribution/legal surface is integrated in the Settings tab.
+
+## Compact web catalog
+
+The web client can use an optional `web/content/featured_catalogue.json` projection to avoid downloading the full thumbnail-attribution manifest on startup. The original card file and complete attribution manifest remain available. Build the projection directly from the exact published card and thumbnail files:
+
+```sh
+node scripts/build-web-catalogue.mjs --origin https://doompedia.elfeel.me --out path/to/featured_catalogue.json
+```
+
+The generator fetches both source files, verifies their ETags during and after capture, and refuses to generate a projection when cards lack thumbnails or the manifest count is inconsistent. Validate the projected count and fields before publishing it alongside the matching source versions. The client checks both ETags before using it and falls back to the original files if the projection is missing, invalid or stale. This check cannot make a multi-file update atomic: publish matching files atomically and avoid in-place updates while clients are loading. Changes to the hosted corpus require regenerating the projection; never replace the hosted data with an older checkout's starter files.
 
 ## Repository layout
 - `docs/` product and technical decisions.
