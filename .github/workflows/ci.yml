@@ -58,6 +58,10 @@ jobs:
           persist-credentials: false
       - name: Build canonical web image
         run: docker build --file deploy/Dockerfile --tag doompedia-web:ci .
+      - name: Verify reproducible hardened baseline
+        run: |
+          test "$(docker image inspect doompedia-web:ci --format '{{index .RootFS.Layers 5}}')" = sha256:90fc7b8e7c8e4d5bdc362d45084d1aa8457f234708883c6ad99074eb480dbcb0
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --entrypoint sh doompedia-web:ci -c 'test "$(id -u)" = 10001 && test "$(id -g)" = 10001 && test -z "$(getcap /usr/bin/caddy)"'
       - name: Verify hardened runtime
         run: |
           set -euo pipefail
