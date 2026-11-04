@@ -1,5 +1,25 @@
 # Production content safety
 
+## Reproducible runtime hardening
+
+The fixed `HARDENING_EPOCH` is the setup timestamp from the verified runtime at
+source `b100c1f977b3ecbce87a6e35dd8a38f96596e17a` (2026-11-04 20:14:39 UTC).
+The unchanged setup commands remove Caddy's file capability and create the
+unprivileged UID/GID 10001. Account creation otherwise changes timestamps on
+every build, producing another complete Caddy-binary layer for a configuration
+change. Normalize only the account's creation-day field and the five affected
+`/etc` timestamps to that baseline. The locked password, ownership, permissions,
+binary and capability removal remain identical.
+
+CI requires the resulting uncompressed hardening-layer digest to equal
+`sha256:90fc7b8e7c8e4d5bdc362d45084d1aa8457f234708883c6ad99074eb480dbcb0`
+and checks runtime identity and capabilities. This permits existing content and
+snapshots to be reused; it does not relax deployment storage or signing gates.
+A deliberate base-image or account-policy update must review and replace this
+baseline and remeasure its storage admission. Image creation/provenance still
+identifies the actual release; the epoch applies only to reproducible account
+setup metadata.
+
 The private controller discovers reviewed `main` commits after their required CI
 runs succeed and owns code publication and deployment. Application workflows
 carry no production release authority or duplicate release manifest. Code releases must

@@ -41,10 +41,13 @@ def test_code_release_image_bakes_only_the_two_brand_assets() -> None:
     ]
     assert re.fullmatch(r"FROM caddy:2-alpine@sha256:[0-9a-f]{64}", instructions[0])
     assert instructions[1:] == [
+        "ARG HARDENING_EPOCH=1793823279",
         "RUN setcap -r /usr/bin/caddy \\",
         "&& test -z \"$(getcap /usr/bin/caddy)\" \\",
         "&& addgroup -S -g 10001 doompedia \\",
-        "&& adduser -S -D -H -u 10001 -G doompedia doompedia",
+        "&& adduser -S -D -H -u 10001 -G doompedia doompedia \\",
+        '&& sed -i -E "s/^(doompedia:[^:]*:)[0-9]+:/\\1$((HARDENING_EPOCH / 86400)):/" /etc/shadow \\',
+        '&& touch -d "@$HARDENING_EPOCH" /etc/group /etc/group- /etc/passwd /etc/shadow /etc',
         "COPY deploy/Caddyfile /etc/caddy/Caddyfile",
         "COPY web/assets/elephant-logo.png web/assets/favicon.ico /brand/assets/",
         "USER doompedia",

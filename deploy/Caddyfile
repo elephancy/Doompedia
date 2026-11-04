@@ -18,13 +18,17 @@
 
 	header /media/featured/* Cache-Control "public, max-age=31536000, immutable"
 
-	header /packs/* Cache-Control "public, max-age=31536000, immutable"
+	@packPayload {
+		path /packs/*
+		not path_regexp ^/packs/.+/(manifest|latest)[.]json$
+	}
+	header @packPayload Cache-Control "public, max-age=31536000, immutable"
 	header /packs/* Access-Control-Allow-Origin "*"
 	header /packs/* Access-Control-Allow-Methods "GET, HEAD"
 	header /packs/* Vary "Origin"
 
-	header /packs/*/manifest.json Cache-Control "public, max-age=120, must-revalidate"
-	header /packs/*/latest.json Cache-Control "public, max-age=120, must-revalidate"
+	@packIndex path_regexp ^/packs/.+/(manifest|latest)[.]json$
+	header @packIndex Cache-Control "public, max-age=120, must-revalidate"
 
 	header /content/* Cache-Control "public, max-age=300, must-revalidate"
 	header /assets/* Cache-Control "public, max-age=86400"
