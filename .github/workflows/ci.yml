@@ -79,10 +79,12 @@ jobs:
             --mount type=bind,src="$PWD/web",dst=/srv,readonly \
             --publish 127.0.0.1:18080:8080 \
             doompedia-web:ci
+          ready=false
           for attempt in $(seq 1 30); do
             if curl --fail --silent --show-error \
               http://127.0.0.1:18080/index.html >/dev/null; then
-              exit 0
+              ready=true
+              break
             fi
             if [ "$(docker inspect --format '{{.State.Status}}' doompedia-web-ci)" != running ]; then
               docker logs doompedia-web-ci
@@ -90,8 +92,26 @@ jobs:
             fi
             sleep 1
           done
-          docker logs doompedia-web-ci
-          exit 1
+          if [ "$ready" != true ]; then
+            docker logs doompedia-web-ci
+            exit 1
+          fi
+
+          for path in / /app.js /assets/favicon.ico /content/seed_en_cards.json /unknown-route; do
+            curl --fail --silent --show-error --head "http://127.0.0.1:18080$path" >/dev/null
+          done
+          for path in /assets/seo-missing.js /content/seo-missing.json /packs/seo-missing/manifest.json /media/seo-missing.jpg /sitemap.xml; do
+            for method in GET HEAD; do
+              headers="$(mktemp)"
+              curl_args=()
+              if [ "$method" = HEAD ]; then curl_args+=(--head); fi
+              status="$(curl --silent --show-error "${curl_args[@]}" --dump-header "$headers" --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:18080$path")"
+              test "$status" = 404
+              tr -d '\r' < "$headers" | grep -qi '^cache-control: no-store$'
+              tr -d '\r' < "$headers" | grep -qi '^content-security-policy:'
+              rm -f "$headers"
+            done
+          done
 
   android-unit:
     runs-on: ubuntu-latest
