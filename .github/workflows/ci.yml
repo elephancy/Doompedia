@@ -65,6 +65,10 @@ jobs:
             docker rm --force doompedia-web-ci >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
+          mkdir -p web/packs/ci/v1
+          printf '{}' > web/packs/ci/v1/manifest.json
+          printf '{}' > web/packs/ci/latest.json
+          printf 'fixture' > web/packs/ci/v1/shard.bin
           docker run --detach \
             --name doompedia-web-ci \
             --init \
@@ -109,6 +113,19 @@ jobs:
               test "$status" = 404
               tr -d '\r' < "$headers" | grep -qi '^cache-control: no-store$'
               tr -d '\r' < "$headers" | grep -qi '^content-security-policy:'
+              rm -f "$headers"
+            done
+          done
+          for path in /packs/ci/v1/manifest.json /packs/ci/latest.json /packs/ci/v1/shard.bin; do
+            expected='public, max-age=120, must-revalidate'
+            if [[ "$path" = *.bin ]]; then expected='public, max-age=31536000, immutable'; fi
+            for method in GET HEAD; do
+              headers="$(mktemp)"
+              curl_args=()
+              if [ "$method" = HEAD ]; then curl_args+=(--head); fi
+              curl --fail --silent --show-error "${curl_args[@]}" --dump-header "$headers" --output /dev/null "http://127.0.0.1:18080$path"
+              tr -d '\r' < "$headers" | grep -qi "^cache-control: $expected$"
+              tr -d '\r' < "$headers" | grep -qi '^access-control-allow-origin: \*$'
               rm -f "$headers"
             done
           done
