@@ -37,8 +37,18 @@
 		file_server
 	}
 
+	@staticFiles path /app.js /styles.css /robots.txt /sitemap.xml /assets/* /content/* /media/* /packs/*
+	handle @staticFiles {
+		file_server
+	}
+
 	handle {
 		try_files {path} /index.html
 		file_server
+	}
+
+	handle_errors {
+		header Cache-Control "no-store"
+		respond "{err.status_code} {err.status_text}" {err.status_code}
 	}
 }
