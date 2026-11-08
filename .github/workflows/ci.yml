@@ -105,16 +105,23 @@ jobs:
             exit 1
           fi
 
-          for path in / /app.js /assets/favicon.ico /content/seed_en_cards.json /unknown-route; do
+          for path in / /index.html /app.js /styles.css /robots.txt /assets/favicon.ico /assets/elephant-logo.png /content/seed_en_cards.json; do
+            curl --fail --silent --show-error "http://127.0.0.1:18080$path" >/dev/null
             curl --fail --silent --show-error --head "http://127.0.0.1:18080$path" >/dev/null
           done
-          for path in /assets/seo-missing.js /content/seo-missing.json /packs/seo-missing/manifest.json /media/seo-missing.jpg /sitemap.xml; do
+          for path in / /index.html '/?source=ci' '/#/explore' '/#/saved' '/#/packs' '/#/settings' '/#/about'; do
+            curl --fail --silent --show-error "http://127.0.0.1:18080$path" | cmp - web/index.html
+          done
+          for path in /unknown-route /unknown-route/child /unknown-route/ /unknown.html /index.html/missing /assets/seo-missing.js /content/seo-missing.json /packs/seo-missing/manifest.json /media/seo-missing.jpg /sitemap.xml; do
+            expected_status=404
+            # Caddy rejects walking through an existing file as a bad request.
+            if [ "$path" = /index.html/missing ]; then expected_status=400; fi
             for method in GET HEAD; do
               headers="$(mktemp)"
               curl_args=()
               if [ "$method" = HEAD ]; then curl_args+=(--head); fi
               status="$(curl --silent --show-error "${curl_args[@]}" --dump-header "$headers" --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:18080$path")"
-              test "$status" = 404
+              test "$status" = "$expected_status"
               tr -d '\r' < "$headers" | grep -qi '^cache-control: no-store$'
               tr -d '\r' < "$headers" | grep -qi '^content-security-policy:'
               rm -f "$headers"

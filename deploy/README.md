@@ -32,6 +32,11 @@ files are copied from `web/assets` during the image build and take precedence
 over the read-only content mount, so brand-only releases do not mutate or
 rearchive the authoritative tree.
 
+Web navigation uses fragment routes (`/#/explore`, `/#/saved`, `/#/packs`,
+`/#/settings`, and `/#/about`). The server serves the existing files and the
+root index, returning HTTP 404 with `Cache-Control: no-store` for missing paths.
+It must not turn arbitrary pathnames into additional copies of the homepage.
+
 Publish data locally first:
 
 ```bash

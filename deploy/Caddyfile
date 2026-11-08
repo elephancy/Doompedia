@@ -47,7 +47,7 @@
 	}
 
 	handle {
-		try_files {path} /index.html
+		# App navigation uses URL fragments; missing paths are real 404s.
 		file_server
 	}
 
