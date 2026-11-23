@@ -75,7 +75,7 @@ ksp {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2026.09.00")
+    val composeBom = platform("androidx.compose:compose-bom:2026.11.01")
     val roomVersion = "2.8.5"
 
     implementation("androidx.core:core-ktx:1.19.1")
@@ -98,19 +98,19 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.3.0")
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     implementation("io.coil-kt:coil:2.7.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.13.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0")
 
     constraints {
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0") {
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.13.0") {
             because("kotlinx.serialization 1.7.x requires Kotlin 2.x, while this project targets Kotlin 1.9.24")
         }
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0") {
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.13.0") {
             because("keep serialization runtime aligned with Kotlin 1.9.24 toolchain")
         }
     }
